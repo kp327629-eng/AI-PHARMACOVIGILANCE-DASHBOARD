@@ -652,17 +652,29 @@ class Database {
   private init() {
     try {
       if (fs.existsSync(DB_FILE)) {
-        const raw = fs.readFileSync(DB_FILE, "utf-8");
-        this.reports = JSON.parse(raw);
-        console.log(`Database loaded: ${this.reports.length} ADR reports ready.`);
+        const raw = fs.readFileSync(DB_FILE, "utf-8").trim();
+        if (raw) {
+          this.reports = JSON.parse(raw);
+          console.log(`Database loaded: ${this.reports.length} ADR reports ready.`);
+        } else {
+          this.reports = [...SEED_REPORTS];
+          this.saveToDisk();
+          console.log("Database file was empty. Seeded with default reports.");
+        }
       } else {
         this.reports = [...SEED_REPORTS];
         this.saveToDisk();
         console.log(`Database initialized and seeded with ${SEED_REPORTS.length} ADR reports.`);
       }
     } catch (error) {
-      console.error("Failed to initialize file database:", error);
+      console.error("Failed to initialize file database, performing self-repair:", error);
       this.reports = [...SEED_REPORTS]; // fallback in memory
+      try {
+        this.saveToDisk(); // Repair disk with seed data
+        console.log("Database file successfully repaired with seed data.");
+      } catch (writeErr) {
+        console.error("Failed to write recovery database to disk:", writeErr);
+      }
     }
   }
 

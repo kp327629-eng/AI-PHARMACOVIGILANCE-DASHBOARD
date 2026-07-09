@@ -23,7 +23,13 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         body: JSON.stringify({ username, password })
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data;
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch (jsonErr) {
+        throw new Error(`Server returned invalid response: ${responseText.substring(0, 100) || "Empty response"}`);
+      }
 
       if (!response.ok) {
         throw new Error(data.error || "Authentication failed.");

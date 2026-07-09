@@ -50,7 +50,14 @@ export default function SearchRecords() {
         throw new Error("Unable to read patient safety databases.");
       }
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data;
+      try {
+        data = responseText ? JSON.parse(responseText) : [];
+      } catch (jsonErr) {
+        throw new Error("Received invalid patient safety data structure.");
+      }
+
       setReports(data);
 
       // Dynamically extract drug names for filters on first load

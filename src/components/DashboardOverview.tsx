@@ -53,8 +53,22 @@ export default function DashboardOverview() {
         throw new Error("Failed to load statistics database.");
       }
 
-      const statsData = await statsRes.json();
-      const analyticsData = await analyticsRes.json();
+      const statsText = await statsRes.text();
+      const analyticsText = await analyticsRes.text();
+
+      let statsData;
+      let analyticsData;
+
+      try {
+        statsData = statsText ? JSON.parse(statsText) : null;
+        analyticsData = analyticsText ? JSON.parse(analyticsText) : null;
+      } catch (jsonErr) {
+        throw new Error("Received malformed data from drug safety database.");
+      }
+
+      if (!statsData || !analyticsData) {
+        throw new Error("Empty dashboard data received.");
+      }
 
       setStats(statsData);
       setAnalytics(analyticsData);

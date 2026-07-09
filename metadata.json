@@ -1,0 +1,6 @@
+{
+  "name": "AI Pharmacovigilance Dashboard",
+  "description": "An AI-powered Pharmacovigilance and drug safety monitoring dashboard that predicts adverse drug reactions (ADRs), provides explainable AI insights, and tracks patient outcomes for clinical research.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

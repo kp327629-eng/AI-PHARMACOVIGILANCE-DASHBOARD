@@ -84,7 +84,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm"
-                  placeholder="e.g. admin"
+                  placeholder="e.g. bala"
                 />
               </div>
             </div>
@@ -139,11 +139,11 @@ export default function Login({ onLoginSuccess }: LoginProps) {
           <div className="mt-6 border-t border-slate-100 pt-5">
             <div className="bg-blue-50 border-l-4 border-blue-600 p-4 rounded-md">
               <p className="text-xs text-blue-800 font-semibold mb-1">
-                DEMO CREDENTIALS:
+                AUTHORIZED CREDENTIALS:
               </p>
               <p className="text-xs text-blue-700">
-                Username: <code className="bg-blue-100 px-1 py-0.5 rounded text-blue-900 font-mono font-semibold">admin</code> <br />
-                Password: <code className="bg-blue-100 px-1 py-0.5 rounded text-blue-900 font-mono font-semibold">admin_password_2026</code>
+                Username: <code className="bg-blue-100 px-1 py-0.5 rounded text-blue-900 font-mono font-semibold">bala</code> <br />
+                Password: <code className="bg-blue-100 px-1 py-0.5 rounded text-blue-900 font-mono font-semibold">bala7603</code>
               </p>
             </div>
             <p className="text-center text-[10px] text-slate-400 mt-4 leading-relaxed">

@@ -11,13 +11,29 @@ function hashPassword(password: string): string {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
 
-// Default admin credentials (username: admin, password: admin_password_2026)
-const ADMIN_USER = "admin";
-const ADMIN_PASS_HASH = hashPassword("admin_password_2026");
+// Default admin credentials (username: bala, password: bala7603)
+const ADMIN_USER = "bala";
+const ADMIN_PASS_HASH = hashPassword("bala7603");
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
+
+  // Trust upstream proxies (Google Cloud Run load balancer)
+  app.set("trust proxy", true);
+
+  // Automatically redirect HTTP to HTTPS in production / cloud environments
+  app.use((req, res, next) => {
+    if (
+      req.headers["x-forwarded-proto"] &&
+      req.headers["x-forwarded-proto"] !== "https" &&
+      req.hostname !== "localhost"
+    ) {
+      console.log(`Redirecting cleartext HTTP request to secure HTTPS: ${req.hostname}${req.url}`);
+      return res.redirect(301, `https://${req.headers.host}${req.url}`);
+    }
+    next();
+  });
 
   // Configure middleware for parsing JSON and URL-encoded bodies
   app.use(express.json());
@@ -26,12 +42,12 @@ async function startServer() {
   // --- API ROUTES ---
 
   // Health check
-  app.get("/api/health", (req, res) => {
+  app.get(["/api/health", "/api/health/"], (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
   // POST /api/login: User Authentication
-  app.post("/api/login", (req, res) => {
+  app.post(["/api/login", "/api/login/"], (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
@@ -52,7 +68,7 @@ async function startServer() {
   });
 
   // GET /api/dashboard: Retrieve dashboard statistics
-  app.get("/api/dashboard", (req, res) => {
+  app.get(["/api/dashboard", "/api/dashboard/"], (req, res) => {
     try {
       const stats = db.getStats();
       res.json(stats);
@@ -63,7 +79,7 @@ async function startServer() {
   });
 
   // GET /api/patients: Search and filter ADR reports / patients
-  app.get("/api/patients", (req, res) => {
+  app.get(["/api/patients", "/api/patients/"], (req, res) => {
     try {
       const { query, drug, severity } = req.query;
       const reports = db.search(
@@ -79,7 +95,7 @@ async function startServer() {
   });
 
   // GET /api/analytics: Demographics and clinical hazard metrics
-  app.get("/api/analytics", (req, res) => {
+  app.get(["/api/analytics", "/api/analytics/"], (req, res) => {
     try {
       const analytics = db.getAnalytics();
       res.json(analytics);
@@ -90,7 +106,7 @@ async function startServer() {
   });
 
   // POST /api/predict: AI Predictive Analysis for Adverse Drug Reactions (ADRs)
-  app.post("/api/predict", async (req, res) => {
+  app.post(["/api/predict", "/api/predict/"], async (req, res) => {
     try {
       const patientData: PatientData = req.body;
 
@@ -254,7 +270,7 @@ async function startServer() {
   });
 
   // Post /api/generate_report: Log audit trail for PDF generating activity
-  app.post("/api/generate_report", (req, res) => {
+  app.post(["/api/generate_report", "/api/generate_report/"], (req, res) => {
     const { reportId } = req.body;
     const report = db.getById(reportId);
     if (!report) {

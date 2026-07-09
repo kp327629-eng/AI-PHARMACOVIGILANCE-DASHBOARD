@@ -27,10 +27,12 @@ async function startServer() {
     if (
       req.headers["x-forwarded-proto"] &&
       req.headers["x-forwarded-proto"] !== "https" &&
-      req.hostname !== "localhost"
+      req.hostname !== "localhost" &&
+      req.hostname !== "127.0.0.1"
     ) {
-      console.log(`Redirecting cleartext HTTP request to secure HTTPS: ${req.hostname}${req.url}`);
-      return res.redirect(301, `https://${req.headers.host}${req.url}`);
+      const redirectCode = req.method === "GET" ? 301 : 307;
+      console.log(`Redirecting cleartext HTTP ${req.method} request to secure HTTPS (${redirectCode}): ${req.hostname}${req.url}`);
+      return res.redirect(redirectCode, `https://${req.headers.host || req.hostname}${req.url}`);
     }
     next();
   });

@@ -6,8 +6,8 @@ interface LoginProps {
 }
 
 export default function Login({ onLoginSuccess }: LoginProps) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("bala");
+  const [password, setPassword] = useState("bala7603");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -148,9 +148,9 @@ export default function Login({ onLoginSuccess }: LoginProps) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-blue-800 hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer disabled:bg-blue-300 disabled:cursor-not-allowed transition"
+                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-semibold text-white bg-blue-800 hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer disabled:bg-blue-300 disabled:cursor-not-allowed transition"
               >
-                {loading ? "Authenticating Session..." : "Establish Secure Session"}
+                {loading ? "Authenticating Session..." : "Enter Portal (Direct Log In)"}
               </button>
             </div>
           </form>

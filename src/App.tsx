@@ -9,19 +9,44 @@ import DocCenter from "./components/DocCenter.js";
 import { ShieldCheck, Info } from "lucide-react";
 
 export default function App() {
-  // Session authentication state (stored in local state)
-  const [user, setUser] = useState<{ username: string; role: string } | null>(null);
+  // Session authentication state (stored in local state, persistent via localStorage)
+  const [user, setUser] = useState<{ username: string; role: string } | null>(() => {
+    try {
+      const saved = localStorage.getItem("pv_user");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   
   // Navigation active tab
   const [activeTab, setActiveTab] = useState<string>("dashboard");
 
   const handleLoginSuccess = (userData: { username: string; role: string }) => {
-    setUser(userData);
+    let finalUser = userData;
+    try {
+      const savedCustom = localStorage.getItem("pv_user_custom");
+      if (savedCustom) {
+        finalUser = JSON.parse(savedCustom);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setUser(finalUser);
+    localStorage.setItem("pv_user", JSON.stringify(finalUser));
     setActiveTab("dashboard");
   };
 
   const handleLogout = () => {
     setUser(null);
+    localStorage.removeItem("pv_user");
+  };
+
+  const handleUpdateProfile = (newUsername: string, newRole: string) => {
+    const updated = { username: newUsername, role: newRole };
+    setUser(updated);
+    localStorage.setItem("pv_user", JSON.stringify(updated));
+    localStorage.setItem("pv_user_custom", JSON.stringify(updated));
   };
 
   // Render view based on selection
@@ -32,7 +57,7 @@ export default function App() {
       case "predict":
         return <PatientFormPredict />;
       case "search":
-        return <SearchRecords />;
+        return <SearchRecords user={user} />;
       case "analytics":
         return <AnalyticsPanel />;
       case "docs":
@@ -55,7 +80,8 @@ export default function App() {
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         user={user} 
-        onLogout={handleLogout} 
+        onLogout={handleLogout}
+        onUpdateProfile={handleUpdateProfile}
       />
 
       {/* Main Content Area - offset by sidebar width (w-64) */}

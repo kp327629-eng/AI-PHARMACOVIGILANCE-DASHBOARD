@@ -1,7 +1,7 @@
 import { jsPDF } from "jspdf";
 import { ADRReport } from "../types.js";
 
-export function generatePDFReport(report: ADRReport): void {
+export function generatePDFReport(report: ADRReport, officerName?: string, officerRole?: string): void {
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "mm",
@@ -60,7 +60,8 @@ export function generatePDFReport(report: ADRReport): void {
   doc.setFont("helvetica", "bold");
   doc.text("System Operator:", 14, 55);
   doc.setFont("helvetica", "normal");
-  doc.text("Senior Drug Safety Officer (AI-PV Engine v1.2)", 48, 55);
+  const displayOfficer = officerName ? `${officerName} (${officerRole || "Senior Drug Safety Officer"})` : "Senior Drug Safety Officer (AI-PV Engine v1.2)";
+  doc.text(displayOfficer, 48, 55);
 
   doc.setFont("helvetica", "bold");
   doc.text("Methodology:", 14, 60);

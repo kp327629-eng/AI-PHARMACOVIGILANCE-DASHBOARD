@@ -2,7 +2,7 @@ import express from "express";
 import path from "path";
 import crypto from "crypto";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
 import { db } from "./src/db.js";
 import { PatientData, PredictionResult } from "./src/types.js";
 
@@ -220,68 +220,92 @@ async function startServer() {
             }
           `;
 
-          const response = await ai.models.generateContent({
-            model: "gemini-3.5-flash",
-            contents: prompt,
-            config: {
-              responseMimeType: "application/json",
-              responseSchema: {
-                type: Type.OBJECT,
-                properties: {
-                  adrDetected: { type: Type.BOOLEAN },
-                  probability: { type: Type.NUMBER },
-                  severity: { type: Type.STRING, description: "Must be exactly 'Low', 'Medium', or 'High'" },
-                  confidence: { type: Type.NUMBER },
-                  riskCategory: { type: Type.STRING },
-                  possibleReaction: { type: Type.STRING },
-                  monitoringAdvice: { type: Type.STRING },
-                  selectedModel: { type: Type.STRING, description: "The name of the model that scored the highest F1-score" },
-                  modelComparison: {
-                    type: Type.ARRAY,
-                    items: {
-                      type: Type.OBJECT,
-                      properties: {
-                        modelName: { type: Type.STRING },
-                        accuracy: { type: Type.NUMBER },
-                        precision: { type: Type.NUMBER },
-                        recall: { type: Type.NUMBER },
-                        f1Score: { type: Type.NUMBER },
-                        rocAuc: { type: Type.NUMBER }
-                      },
-                      required: ["modelName", "accuracy", "precision", "recall", "f1Score", "rocAuc"]
-                    }
-                  },
-                  shapValues: {
-                    type: Type.ARRAY,
-                    items: {
-                      type: Type.OBJECT,
-                      properties: {
-                        feature: { type: Type.STRING },
-                        impact: { type: Type.NUMBER }
-                      },
-                      required: ["feature", "impact"]
-                    }
-                  }
-                },
-                required: [
-                  "adrDetected",
-                  "probability",
-                  "severity",
-                  "confidence",
-                  "riskCategory",
-                  "possibleReaction",
-                  "monitoringAdvice",
-                  "selectedModel",
-                  "modelComparison",
-                  "shapValues"
-                ]
-              }
-            }
-          });
+          let response;
+          let success = false;
+          const modelsToTry = [
+            { name: "gemini-2.5-flash", config: { thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL } } },
+            { name: "gemini-1.5-flash", config: {} },
+            { name: "gemini-3.5-flash", config: { thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL } } }
+          ];
 
-          const jsonText = response.text || "{}";
-          predictionResult = JSON.parse(jsonText.trim());
-          console.log("Gemini AI prediction generated successfully.");
+          for (const modelOption of modelsToTry) {
+            try {
+              console.log(`Attempting prediction with model: ${modelOption.name}`);
+              response = await ai.models.generateContent({
+                model: modelOption.name,
+                contents: prompt,
+                config: {
+                  ...modelOption.config,
+                  responseMimeType: "application/json",
+                  responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                      adrDetected: { type: Type.BOOLEAN },
+                      probability: { type: Type.NUMBER },
+                      severity: { type: Type.STRING, description: "Must be exactly 'Low', 'Medium', or 'High'" },
+                      confidence: { type: Type.NUMBER },
+                      riskCategory: { type: Type.STRING },
+                      possibleReaction: { type: Type.STRING },
+                      monitoringAdvice: { type: Type.STRING },
+                      selectedModel: { type: Type.STRING, description: "The name of the model that scored the highest F1-score" },
+                      modelComparison: {
+                        type: Type.ARRAY,
+                        items: {
+                          type: Type.OBJECT,
+                          properties: {
+                            modelName: { type: Type.STRING },
+                            accuracy: { type: Type.NUMBER },
+                            precision: { type: Type.NUMBER },
+                            recall: { type: Type.NUMBER },
+                            f1Score: { type: Type.NUMBER },
+                            rocAuc: { type: Type.NUMBER }
+                          },
+                          required: ["modelName", "accuracy", "precision", "recall", "f1Score", "rocAuc"]
+                        }
+                      },
+                      shapValues: {
+                        type: Type.ARRAY,
+                        items: {
+                          type: Type.OBJECT,
+                          properties: {
+                            feature: { type: Type.STRING },
+                            impact: { type: Type.NUMBER }
+                          },
+                          required: ["feature", "impact"]
+                        }
+                      }
+                    },
+                    required: [
+                      "adrDetected",
+                      "probability",
+                      "severity",
+                      "confidence",
+                      "riskCategory",
+                      "possibleReaction",
+                      "monitoringAdvice",
+                      "selectedModel",
+                      "modelComparison",
+                      "shapValues"
+                    ]
+                  }
+                }
+              });
+              
+              if (response && response.text) {
+                const jsonText = response.text || "{}";
+                predictionResult = JSON.parse(jsonText.trim());
+                console.log(`Gemini AI prediction generated successfully using model: ${modelOption.name}`);
+                success = true;
+                break;
+              }
+            } catch (err) {
+              console.warn(`Model ${modelOption.name} prediction attempt failed:`, err);
+            }
+          }
+
+          if (!success) {
+            throw new Error("All tried Gemini models failed or returned empty content.");
+          }
         } catch (geminiError) {
           console.error("Gemini call failed, defaulting to clinical expert system:", geminiError);
           predictionResult = runClinicalRulesEngine(patientData);

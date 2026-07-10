@@ -14,7 +14,11 @@ import {
 import { ADRReport, SearchFilters } from "../types.js";
 import { generatePDFReport } from "../utils/reportGenerator.js";
 
-export default function SearchRecords() {
+interface SearchRecordsProps {
+  user?: { username: string; role: string } | null;
+}
+
+export default function SearchRecords({ user }: SearchRecordsProps) {
   const [reports, setReports] = useState<ADRReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -96,11 +100,11 @@ export default function SearchRecords() {
       });
 
       // Call our client side PDF compiler
-      generatePDFReport(report);
+      generatePDFReport(report, user?.username, user?.role);
     } catch (err) {
       console.error("PDF logging failed:", err);
       // Still allow the PDF generation even if logging is slow
-      generatePDFReport(report);
+      generatePDFReport(report, user?.username, user?.role);
     }
   };
 

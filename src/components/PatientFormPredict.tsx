@@ -66,7 +66,7 @@ export default function PatientFormPredict() {
         }
         return prev + 1;
       });
-    }, 700);
+    }, 250);
     return interval;
   };
 

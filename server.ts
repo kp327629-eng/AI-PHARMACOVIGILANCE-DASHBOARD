@@ -83,9 +83,11 @@ async function startServer() {
     }
 
     const cleanUsername = username.trim().toLowerCase();
-    const inputHash = hashPassword(password);
+    const cleanPassword = password.trim();
+    const inputHash = hashPassword(cleanPassword);
+    const inputHashLower = hashPassword(cleanPassword.toLowerCase());
 
-    if (cleanUsername === ADMIN_USER && inputHash === ADMIN_PASS_HASH) {
+    if (cleanUsername === ADMIN_USER && (inputHash === ADMIN_PASS_HASH || inputHashLower === ADMIN_PASS_HASH)) {
       return res.json({
         success: true,
         message: "Login successful.",

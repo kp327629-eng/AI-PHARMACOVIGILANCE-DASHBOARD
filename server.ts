@@ -19,18 +19,59 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  // In-memory request log for mobile and system diagnostics
+  const requestLogs: any[] = [];
+
   // Trust upstream proxies (Google Cloud Run load balancer)
   app.set("trust proxy", true);
+
+  // Enable comprehensive CORS headers & resolve OPTIONS preflights
+  app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+    if (req.method === "OPTIONS") {
+      return res.sendStatus(204);
+    }
+    next();
+  });
 
   // Configure middleware for parsing JSON and URL-encoded bodies
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  // Log parsed requests for troubleshooting mobile connectivity issues
+  app.use((req, res, next) => {
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      method: req.method,
+      url: req.url,
+      originalUrl: req.originalUrl,
+      headers: {
+        host: req.headers.host,
+        "user-agent": req.headers["user-agent"],
+        "content-type": req.headers["content-type"],
+        "x-forwarded-proto": req.headers["x-forwarded-proto"]
+      },
+      body: req.method === "POST" ? { ...req.body, password: req.body.password ? "***" : undefined } : undefined
+    };
+    requestLogs.push(logEntry);
+    if (requestLogs.length > 50) {
+      requestLogs.shift();
+    }
+    next();
+  });
 
   // --- API ROUTES ---
 
   // Health check
   app.get(["/api/health", "/api/health/"], (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
+  // Debug requests endpoint
+  app.get(["/api/debug-requests", "/api/debug-requests/"], (req, res) => {
+    res.json(requestLogs);
   });
 
   // POST /api/login: User Authentication
@@ -268,6 +309,14 @@ async function startServer() {
       success: true,
       message: "Report compiled and ready for vector PDF download.",
       timestamp: new Date().toISOString()
+    });
+  });
+
+  // Catch-all for undefined /api/* routes to avoid falling back to SPA HTML
+  app.all("/api/*", (req, res) => {
+    console.warn(`[API NOT FOUND] ${req.method} ${req.originalUrl}`);
+    res.status(404).json({
+      error: `API route not found: ${req.method} ${req.originalUrl}`
     });
   });
 

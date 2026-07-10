@@ -82,12 +82,25 @@ async function startServer() {
       return res.status(400).json({ error: "Username and password are required." });
     }
 
-    const cleanUsername = username.trim().toLowerCase();
+    // Strip any trailing periods (often auto-inserted by mobile keyboards when pressing space twice) and lowercase
+    const cleanUsername = username.trim().toLowerCase().replace(/\.+$/, "");
+    
+    // Support various common mobile typing anomalies for password
     const cleanPassword = password.trim();
-    const inputHash = hashPassword(cleanPassword);
-    const inputHashLower = hashPassword(cleanPassword.toLowerCase());
+    const cleanPasswordNoPeriod = cleanPassword.replace(/\.+$/, "");
 
-    if (cleanUsername === ADMIN_USER && (inputHash === ADMIN_PASS_HASH || inputHashLower === ADMIN_PASS_HASH)) {
+    const hash1 = hashPassword(cleanPassword);
+    const hash2 = hashPassword(cleanPassword.toLowerCase());
+    const hash3 = hashPassword(cleanPasswordNoPeriod);
+    const hash4 = hashPassword(cleanPasswordNoPeriod.toLowerCase());
+
+    const isPasswordCorrect = 
+      hash1 === ADMIN_PASS_HASH || 
+      hash2 === ADMIN_PASS_HASH || 
+      hash3 === ADMIN_PASS_HASH || 
+      hash4 === ADMIN_PASS_HASH;
+
+    if (cleanUsername === ADMIN_USER && isPasswordCorrect) {
       return res.json({
         success: true,
         message: "Login successful.",

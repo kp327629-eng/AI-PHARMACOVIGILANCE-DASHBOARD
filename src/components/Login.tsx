@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ShieldCheck, Lock, User, AlertCircle } from "lucide-react";
+import { ShieldCheck, Lock, User, AlertCircle, Eye, EyeOff } from "lucide-react";
 
 interface LoginProps {
   onLoginSuccess: (user: { username: string; role: string }) => void;
@@ -8,6 +8,7 @@ interface LoginProps {
 export default function Login({ onLoginSuccess }: LoginProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,10 +19,11 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 
     try {
       const trimmedUsername = username.trim();
+      const trimmedPassword = password.trim();
       const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: trimmedUsername, password })
+        body: JSON.stringify({ username: trimmedUsername, password: trimmedPassword })
       });
 
       const responseText = await response.text();
@@ -94,7 +96,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
               </div>
             </div>
 
-            <div>
+             <div>
               <label htmlFor="password" className="block text-sm font-medium text-slate-700">
                 Security Password
               </label>
@@ -105,7 +107,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -113,9 +115,17 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                   autoComplete="current-password"
                   autoCorrect="off"
                   spellCheck="false"
-                  className="block w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm"
+                  className="block w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm"
                   placeholder="••••••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer"
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
 

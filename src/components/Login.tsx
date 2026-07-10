@@ -17,10 +17,11 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     setLoading(true);
 
     try {
+      const trimmedUsername = username.trim();
       const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username: trimmedUsername, password })
       });
 
       const responseText = await response.text();

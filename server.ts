@@ -22,21 +22,6 @@ async function startServer() {
   // Trust upstream proxies (Google Cloud Run load balancer)
   app.set("trust proxy", true);
 
-  // Automatically redirect HTTP to HTTPS in production / cloud environments
-  app.use((req, res, next) => {
-    if (
-      req.headers["x-forwarded-proto"] &&
-      req.headers["x-forwarded-proto"] !== "https" &&
-      req.hostname !== "localhost" &&
-      req.hostname !== "127.0.0.1"
-    ) {
-      const redirectCode = req.method === "GET" ? 301 : 307;
-      console.log(`Redirecting cleartext HTTP ${req.method} request to secure HTTPS (${redirectCode}): ${req.hostname}${req.url}`);
-      return res.redirect(redirectCode, `https://${req.headers.host || req.hostname}${req.url}`);
-    }
-    next();
-  });
-
   // Configure middleware for parsing JSON and URL-encoded bodies
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
@@ -56,9 +41,10 @@ async function startServer() {
       return res.status(400).json({ error: "Username and password are required." });
     }
 
+    const cleanUsername = username.trim().toLowerCase();
     const inputHash = hashPassword(password);
 
-    if (username.toLowerCase() === ADMIN_USER && inputHash === ADMIN_PASS_HASH) {
+    if (cleanUsername === ADMIN_USER && inputHash === ADMIN_PASS_HASH) {
       return res.json({
         success: true,
         message: "Login successful.",

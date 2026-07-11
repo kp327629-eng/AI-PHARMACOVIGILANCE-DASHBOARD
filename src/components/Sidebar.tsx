@@ -18,9 +18,19 @@ interface SidebarProps {
   user: { username: string; role: string } | null;
   onLogout: () => void;
   onUpdateProfile?: (username: string, role: string) => void;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export default function Sidebar({ activeTab, setActiveTab, user, onLogout, onUpdateProfile }: SidebarProps) {
+export default function Sidebar({ 
+  activeTab, 
+  setActiveTab, 
+  user, 
+  onLogout, 
+  onUpdateProfile,
+  isOpen = false,
+  onClose = () => {}
+}: SidebarProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editUsername, setEditUsername] = useState("");
   const [editRole, setEditRole] = useState("");
@@ -47,19 +57,41 @@ export default function Sidebar({ activeTab, setActiveTab, user, onLogout, onUpd
   ];
 
   return (
-    <aside className="w-64 bg-slate-900 text-slate-100 flex flex-col h-screen fixed left-0 top-0 border-r border-slate-800 z-10 font-sans">
-      {/* Branding Header */}
-      <div className="h-16 flex items-center px-6 border-b border-slate-800 gap-3">
-        <ShieldAlert className="text-blue-400 shrink-0" size={24} />
-        <div>
-          <h1 className="text-sm font-extrabold tracking-wider text-white uppercase">
-            PV Safety AI
-          </h1>
-          <p className="text-[10px] text-slate-400 font-semibold tracking-tight uppercase">
-            Pharmacovigilance
-          </p>
+    <>
+      {/* Mobile Backdrop Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 md:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      <aside className={`fixed inset-y-0 left-0 w-64 bg-slate-900 text-slate-100 flex flex-col h-screen border-r border-slate-800 z-50 font-sans transition-transform duration-300 transform ${
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      } md:translate-x-0`}>
+        {/* Branding Header */}
+        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800 gap-3">
+          <div className="flex items-center gap-3">
+            <ShieldAlert className="text-blue-400 shrink-0" size={24} />
+            <div>
+              <h1 className="text-sm font-extrabold tracking-wider text-white uppercase">
+                PV Safety AI
+              </h1>
+              <p className="text-[10px] text-slate-400 font-semibold tracking-tight uppercase">
+                Pharmacovigilance
+              </p>
+            </div>
+          </div>
+          
+          {/* Mobile Close Button */}
+          <button 
+            onClick={onClose}
+            className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+            aria-label="Close navigation menu"
+          >
+            <X size={18} />
+          </button>
         </div>
-      </div>
 
       {/* User Session Profile Card */}
       <div className="p-4 border-b border-slate-800 bg-slate-950/40 relative group">
@@ -212,5 +244,6 @@ export default function Sidebar({ activeTab, setActiveTab, user, onLogout, onUpd
         </div>
       )}
     </aside>
+    </>
   );
 }

@@ -6,7 +6,7 @@ import PatientFormPredict from "./components/PatientFormPredict.js";
 import SearchRecords from "./components/SearchRecords.js";
 import AnalyticsPanel from "./components/AnalyticsPanel.js";
 import DocCenter from "./components/DocCenter.js";
-import { ShieldCheck, Info } from "lucide-react";
+import { ShieldCheck, Info, Menu } from "lucide-react";
 
 export default function App() {
   // Session authentication state (stored in local state, persistent via localStorage)
@@ -21,6 +21,7 @@ export default function App() {
   
   // Navigation active tab
   const [activeTab, setActiveTab] = useState<string>("dashboard");
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
 
   const handleLoginSuccess = (userData: { username: string; role: string }) => {
     let finalUser = userData;
@@ -74,23 +75,37 @@ export default function App() {
 
   // Authenticated Dashboard Layout
   return (
-    <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800">
+    <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800 relative overflow-x-hidden">
       {/* Sidebar - fixed left */}
       <Sidebar 
         activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
+        setActiveTab={(tab) => {
+          setActiveTab(tab);
+          setMobileSidebarOpen(false);
+        }} 
         user={user} 
         onLogout={handleLogout}
         onUpdateProfile={handleUpdateProfile}
+        isOpen={mobileSidebarOpen}
+        onClose={() => setMobileSidebarOpen(false)}
       />
 
-      {/* Main Content Area - offset by sidebar width (w-64) */}
-      <div className="flex-1 pl-64 flex flex-col min-h-screen">
+      {/* Main Content Area - offset by sidebar width (w-64) on desktop */}
+      <div className="flex-1 md:pl-64 flex flex-col min-h-screen w-full min-w-0">
         
         {/* Top Navbar */}
-        <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-8 sticky top-0 z-10 shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="text-xs bg-blue-100 text-blue-900 font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">
+        <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 shrink-0">
+          <div className="flex items-center gap-2 md:gap-3">
+            {/* Hamburger button for mobile */}
+            <button
+              onClick={() => setMobileSidebarOpen(true)}
+              className="md:hidden p-2 -ml-2 rounded-lg text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+              title="Open Navigation"
+              aria-label="Open Navigation"
+            >
+              <Menu size={20} />
+            </button>
+            <span className="text-[10px] sm:text-xs bg-blue-100 text-blue-900 font-extrabold px-2 sm:px-2.5 py-1 rounded-full uppercase tracking-wider whitespace-nowrap">
               Educational Sandbox Active
             </span>
           </div>

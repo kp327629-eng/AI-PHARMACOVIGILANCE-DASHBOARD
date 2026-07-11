@@ -378,10 +378,10 @@ async function startServer() {
 // LOCAL CLINICAL RULES-BASED EXPERT ENGINE (Fallback/Offline mode)
 // Generates highly accurate clinical safety assessments for top medications
 function runClinicalRulesEngine(p: PatientData): PredictionResult {
-  const drug = p.drugName.toLowerCase();
-  const symptoms = p.symptoms.toLowerCase();
-  const hist = p.medicalHistory.toLowerCase();
-  const allergy = p.allergies.toLowerCase();
+  const drug = (p.drugName || "").toLowerCase();
+  const symptoms = (p.symptoms || "").toLowerCase();
+  const hist = (p.medicalHistory || "").toLowerCase();
+  const allergy = (p.allergies || "").toLowerCase();
 
   let adrDetected = true;
   let probability = 65;
